@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
-  useMediaDevices,
   VideoRenderer,
   createLocalVideoTrack,
   LocalVideoTrack,
 } from 'livekit-client';
+
 
 export default function Join() {
   const [name, setName] = useState('');
@@ -18,12 +18,19 @@ export default function Join() {
   // Lista dispositivos de vídeo
   const mediaDevices = useMediaDevices();
 
-  useEffect(() => {
-    if (mediaDevices && mediaDevices.videoInput.length > 0) {
-      setDevices(mediaDevices.videoInput);
-      setSelectedDeviceId(mediaDevices.videoInput[0].deviceId);
+useEffect(() => {
+  const fetchDevices = async () => {
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    const videoInputs = allDevices.filter((d) => d.kind === 'videoinput');
+    setDevices(videoInputs);
+    if (videoInputs.length > 0) {
+      setSelectedDeviceId(videoInputs[0].deviceId);
     }
-  }, [mediaDevices]);
+  };
+
+  fetchDevices();
+}, []);
+
 
   // Inicia a câmera
   useEffect(() => {

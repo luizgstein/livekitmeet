@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useState } from 'react';
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
 import styles from '../styles/Home.module.css';
+import toast from 'react-hot-toast';
+
 
 
 function Tabs(props: React.PropsWithChildren<{}>) {
@@ -57,6 +59,8 @@ function DemoMeetingTab(props: { label: string }) {
   const router = useRouter();
   const [e2ee, setE2ee] = useState(false);
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
   const startMeeting = () => {
     if (e2ee) {
       router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
@@ -64,15 +68,72 @@ function DemoMeetingTab(props: { label: string }) {
       router.push(`/rooms/${generateRoomId()}`);
     }
   };
+
+    async function criarParaDepois() {
+    setMenuOpen(false);
+    const { url } = await fetch('/api/create-room?user=host').then((r) => r.json());
+    await navigator.clipboard.writeText(url);
+    setShareLink(url);               // abre o diálogo de copiar
+  }
+
+  async function iniciarAgora() {
+    setMenuOpen(false);
+    const { url } = await fetch('/api/create-room?user=host').then((r) => r.json());
+    setShareLink(url);               // mostra link
+    router.push(url);                // entra na sala na mesma aba
+  }
+
+    {shareLink && (
+      <div className={styles.overlay}>
+        <div className={styles.dialog}>
+          <h3>Link copiado ✔️</h3>
+
+          {/* campo só‑leitura com o link */}
+          <input value={shareLink} readOnly style={{ width: '100%' }} />
+
+          <button
+            className="lk-button"
+            onClick={() => {
+              navigator.clipboard.writeText(shareLink);
+              toast.success('Copiado novamente!');
+            }}
+          >
+            Copiar
+          </button>
+
+          <button className="lk-button" onClick={() => setShareLink(null)}>
+            Fechar
+          </button>
+        </div>
+      </div>
+    )}
+
+    return (
+      <div className={styles.tabContent}>
+        {/* ...resto da página */}
+      </div>
+    ); 
+
   return (
     <div className={styles.tabContent}>
       <p style={{ margin: 0 }}>Este será o novo aplicativo de videochamadas da OVT Academy</p>
-      <button style={{ marginTop: '1rem', background: '#4285f4' }}
-      className="lk-button"
-      onClick={novaReuniao}
-      >
-      Nova Reunião
-    </button>
+      <div style={{ position: 'relative', marginTop: '1rem' }}>
+  <button
+    className="lk-button"
+    style={{ background: '#4285f4' }}
+    onClick={() => setMenuOpen((o) => !o)}
+  >
+    Nova Reunião
+  </button>
+
+  {menuOpen && (
+    <div className={styles.dropdown}>
+      <button onClick={criarParaDepois}>Criar uma reunião para depois</button>
+      <button onClick={iniciarAgora}>Iniciar uma reunião instantânea</button>
+    </div>
+  )}
+</div>
+
 
       <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
         Start Meeting

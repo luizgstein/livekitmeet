@@ -5,6 +5,7 @@ import React, { Suspense, useState } from 'react';
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
 import styles from '../styles/Home.module.css';
 
+
 function Tabs(props: React.PropsWithChildren<{}>) {
   const searchParams = useSearchParams();
   const tabIndex = searchParams?.get('tab') === 'custom' ? 1 : 0;
@@ -41,6 +42,17 @@ function Tabs(props: React.PropsWithChildren<{}>) {
   );
 }
 
+async function novaReuniao() {
+  // chama o endpoint que criamos
+  const resp = await fetch('/api/create-room?user=host');
+  const { url } = await resp.json();
+  // copia para a área de transferência
+  await navigator.clipboard.writeText(url);
+  alert('Link copiado! Abrindo a sala…');
+  // abre a sala em nova aba
+  window.open(url, '_blank');
+}
+
 function DemoMeetingTab(props: { label: string }) {
   const router = useRouter();
   const [e2ee, setE2ee] = useState(false);
@@ -55,6 +67,13 @@ function DemoMeetingTab(props: { label: string }) {
   return (
     <div className={styles.tabContent}>
       <p style={{ margin: 0 }}>Este será o novo aplicativo de videochamadas da OVT Academy</p>
+      <button style={{ marginTop: '1rem', background: '#4285f4' }}
+      className="lk-button"
+      onClick={novaReuniao}
+      >
+      Nova Reunião
+    </button>
+
       <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
         Start Meeting
       </button>

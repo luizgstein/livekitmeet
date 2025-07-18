@@ -23,9 +23,12 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   RoomEvent,
+  TrackPublishDefaults,
+  VideoCaptureOptions,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
+import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -105,23 +108,25 @@ function VideoConferenceComponent(props: {
     if (e2eeEnabled && (videoCodec === 'av1' || videoCodec === 'vp9')) {
       videoCodec = undefined;
     }
+    const videoCaptureDefaults: VideoCaptureOptions = {
+      deviceId: props.userChoices.videoDeviceId ?? undefined,
+      resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
+    };
+    const publishDefaults: TrackPublishDefaults = {
+      dtx: false,
+      videoSimulcastLayers: props.options.hq
+        ? [VideoPresets.h1080, VideoPresets.h720]
+        : [VideoPresets.h540, VideoPresets.h216],
+      red: !e2eeEnabled,
+      videoCodec,
+    };
     return {
-      videoCaptureDefaults: {
-        deviceId: props.userChoices.videoDeviceId ?? undefined,
-        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
-      },
-      publishDefaults: {
-        dtx: false,
-        videoSimulcastLayers: props.options.hq
-          ? [VideoPresets.h1080, VideoPresets.h720]
-          : [VideoPresets.h540, VideoPresets.h216],
-        red: !e2eeEnabled,
-        videoCodec,
-      },
+      videoCaptureDefaults: videoCaptureDefaults,
+      publishDefaults: publishDefaults,
       audioCaptureDefaults: {
         deviceId: props.userChoices.audioDeviceId ?? undefined,
       },
-      adaptiveStream: { pixelDensity: 'screen' },
+      adaptiveStream: true,
       dynacast: true,
       e2ee: keyProvider && worker && e2eeEnabled ? { keyProvider, worker } : undefined,
     };
@@ -161,6 +166,7 @@ function VideoConferenceComponent(props: {
     room.on(RoomEvent.Disconnected, handleOnLeave);
     room.on(RoomEvent.EncryptionError, handleEncryptionError);
     room.on(RoomEvent.MediaDevicesError, handleError);
+
     if (e2eeSetupComplete) {
       room
         .connect(
@@ -189,6 +195,8 @@ function VideoConferenceComponent(props: {
     };
   }, [e2eeSetupComplete, room, props.connectionDetails, props.userChoices]);
 
+  const lowPowerMode = useLowCPUOptimizer(room);
+
   const router = useRouter();
   const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
   const handleError = React.useCallback((error: Error) => {
@@ -201,6 +209,12 @@ function VideoConferenceComponent(props: {
       `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
     );
   }, []);
+
+  React.useEffect(() => {
+    if (lowPowerMode) {
+      console.warn('Low power mode enabled');
+    }
+  }, [lowPowerMode]);
 
   return (
     <div className="lk-room-container">

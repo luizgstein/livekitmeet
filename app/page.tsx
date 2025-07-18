@@ -108,12 +108,6 @@ function DemoMeetingTab(props: { label: string }) {
       </div>
     )}
 
-    return (
-      <div className={styles.tabContent}>
-        {/* ...resto da página */}
-      </div>
-    ); 
-
   return (
     <div className={styles.tabContent}>
       <p style={{ margin: 0 }}>Este será o novo aplicativo de videochamadas da OVT Academy</p>

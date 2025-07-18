@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import {
-  createLocalVideoTrack,
-  LocalVideoTrack,
-} from 'livekit-client';
+import { createLocalVideoTrack, LocalVideoTrack } from 'livekit-client';
 
 
 export default function Join() {

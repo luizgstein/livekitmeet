@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
-  VideoRenderer,
   createLocalVideoTrack,
   LocalVideoTrack,
 } from 'livekit-client';
@@ -14,9 +13,6 @@ export default function Join() {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>();
   const router = useRouter();
-
-  // Lista dispositivos de vídeo
-  const mediaDevices = useMediaDevices();
 
 useEffect(() => {
   const fetchDevices = async () => {
@@ -50,6 +46,18 @@ useEffect(() => {
     };
   }, [selectedDeviceId]);
 
+  // Anexa o <video> dentro da div #preview
+useEffect(() => {
+  if (!videoTrack) return;                 // nada a fazer se ainda não criou
+
+  const el = videoTrack.attach();          // cria o elemento <video>
+  document.getElementById('preview')?.appendChild(el);
+
+  return () => {
+    videoTrack.detach();                   // remove ao sair da página
+  };
+}, [videoTrack]);                          // roda sempre que a track mudar
+
   const handleJoin = async () => {
     const res = await fetch('https://eoakvw76g3reezh.m.pipedream.net/', {
       method: 'POST',
@@ -67,8 +75,9 @@ useEffect(() => {
     <div style={{ display: 'flex', flexDirection: 'column', padding: 32, alignItems: 'center' }}>
       <h2>Entrar na reunião</h2>
 
-      <div style={{ width: 320, height: 240, marginBottom: 16, backgroundColor: '#000' }}>
-        {videoTrack && <VideoRenderer track={videoTrack} />}
+      <div 
+        id="preview"
+        style={{ width: 320, height: 240, marginBottom: 16, backgroundColor: '#000' }}>
       </div>
 
       <select

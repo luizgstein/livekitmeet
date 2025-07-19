@@ -16,26 +16,23 @@ export async function POST(req: NextRequest) {
 
   /** 🔑  ESTA linha TEM de chamar `.toJwt()` – retorna string  */
   // 1) cria o token
-const at = new AccessToken(
-  process.env.LIVEKIT_API_KEY!,          // apiKey   (string)
-  process.env.LIVEKIT_API_SECRET!,       // apiSecret(string)
-  { identity: hostIdentity },            // opções
-);
+// … código acima mantido …
 
-// 2) adiciona as permissões
-at.addGrant({
-  roomJoin : true,
-  roomAdmin: true,
-  room     : roomId,
+// 1) crie a instância
+const at = new AccessToken(
+  process.env.LIVEKIT_API_KEY!,
+  process.env.LIVEKIT_API_SECRET!,
+);
+at.identity = hostIdentity;                // <‑‑ define identity
+at.addGrant({ roomJoin: true, roomAdmin: true, room: roomId });
+
+// 2) gere a **string** JWT
+const hostToken = at.toJwt();              // ← string, NÃO objeto !
+
+return NextResponse.json({
+  roomId,
+  hostToken,                               // string p/ front‑end
+  joinUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin}/r/${roomId}`,
 });
 
-// 3) gera a string JWT
-const hostToken = at.toJwt();            // ← agora é string
-
-
-  return NextResponse.json({
-    roomId,
-    hostToken,                               // string
-    joinUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin}/r/${roomId}`,
-  });
 }

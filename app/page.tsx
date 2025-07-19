@@ -46,46 +46,44 @@ function DemoMeetingTab({label}:{label:string}) {
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [shareLink,  setShareLink]  = useState<string | null>(null);
 
-  /* helper que chama o backend */
-  async function createRoomOnServer() {
-    const hostIdentity = prompt('Seu nome (host):') || `host-${Date.now()}`;
-    const res = await fetch('/api/create-room', {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({ hostIdentity }),
-    });
-    if (!res.ok) throw new Error('Falha ao criar sala');
-    return res.json() as Promise<{
-      roomId: string; hostToken: string; joinUrl: string;
-    }>;
-  }
+  /* helper que chama o backend ---------------------------------*/
+async function createRoomOnServer() {
+  const hostIdentity = prompt('Seu nome (host):') || `host-${Date.now()}`;
+  const res = await fetch('/api/create-room', {
+    method : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body   : JSON.stringify({ hostIdentity }),
+  });
+  if (!res.ok) throw new Error('Falha ao criar sala');
+  return res.json() as Promise<{
+    roomId: string;
+    hostToken: string;
+    joinUrl: string;
+  }>;
+}
 
-/* apenas copiar link curto */
+/* menu: criar link -------------------------------------------*/
 async function criarParaDepois() {
   setMenuOpen(false);
 
-  const { roomId, joinUrl, hostToken } = await fetch(
-    '/api/create-room?user=host',
-  ).then((r) => r.json());
+  const { roomId, joinUrl, hostToken } = await createRoomOnServer();
 
   sessionStorage.setItem(`token-${roomId}`, hostToken);
 
   await navigator.clipboard.writeText(joinUrl);
-  setShareLink(joinUrl);           // mostra diálogo
+  setShareLink(joinUrl);                       // diálogo “Link copiado”
 }
 
-/* criar sala e entrar */
+/* menu: iniciar e entrar -------------------------------------*/
 async function iniciarAgora() {
   setMenuOpen(false);
 
-  const { roomId, joinUrl, hostToken } = await fetch(
-    '/api/create-room?user=host',
-  ).then((r) => r.json());
+  const { roomId, joinUrl, hostToken } = await createRoomOnServer();
 
   sessionStorage.setItem(`token-${roomId}`, hostToken);
 
-  router.push(`/r/${roomId}`);     // navega só com o path interno
-  // se preferir nova aba: window.open(joinUrl, '_blank');
+  router.push(`/r/${roomId}`);                 // só o path interno
+  // window.open(joinUrl, '_blank');           // se preferir nova aba
 }
 
 

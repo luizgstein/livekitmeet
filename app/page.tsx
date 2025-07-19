@@ -46,19 +46,19 @@ function DemoMeetingTab({label}:{label:string}) {
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [shareLink,  setShareLink]  = useState<string | null>(null);
 
-  /* helper que chama o backend ---------------------------------*/
+// helper único – usa a NOVA rota POST
 async function createRoomOnServer() {
   const hostIdentity = prompt('Seu nome (host):') || `host-${Date.now()}`;
   const res = await fetch('/api/create-room', {
-    method : 'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify({ hostIdentity }),
+    body: JSON.stringify({ hostIdentity }),
   });
   if (!res.ok) throw new Error('Falha ao criar sala');
   return res.json() as Promise<{
     roomId: string;
     hostToken: string;
-    joinUrl: string;
+    joinUrl: string;         // <<< mesma chave que o backend devolve
   }>;
 }
 

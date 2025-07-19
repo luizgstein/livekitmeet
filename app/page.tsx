@@ -61,22 +61,32 @@ function DemoMeetingTab({label}:{label:string}) {
   }
 
   /* 1. apenas copiar link curto */
-  async function criarParaDepois() {
-    setMenuOpen(false);
-    const { roomId, hostToken, joinUrl } = await createRoomOnServer();
-    sessionStorage.setItem(`token-${roomId}`, hostToken);
-    await navigator.clipboard.writeText(joinUrl);
-    setShareLink(joinUrl);
-  }
+/* menu: criar link */
+async function criarParaDepois() {
+  setMenuOpen(false);
 
-  /* 2. criar e entrar na mesma aba */
-  async function iniciarAgora() {
-    setMenuOpen(false);
-    const { roomId, hostToken, joinUrl } = await createRoomOnServer();
-    sessionStorage.setItem(`token-${roomId}`, hostToken);
-    setShareLink(joinUrl);
-    router.push(joinUrl);           // link curto, sem ?token
-  }
+  // 🔽 recebe roomId e hostToken também
+  const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
+    .then((r) => r.json());
+
+  // grava token para o host
+  sessionStorage.setItem(`token-${roomId}`, hostToken);
+
+  await navigator.clipboard.writeText(url);
+  setShareLink(url);          // mostra diálogo de copiar
+}
+
+/* menu: iniciar e entrar */
+async function iniciarAgora() {
+  setMenuOpen(false);
+
+  const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
+    .then((r) => r.json());
+
+  sessionStorage.setItem(`token-${roomId}`, hostToken);
+
+  router.push(url);           // entra na mesma aba
+}
 
   /* ---------- RENDER ---------- */
   return (

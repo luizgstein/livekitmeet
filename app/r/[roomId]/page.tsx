@@ -14,20 +14,23 @@ export default function RoomPage() {
       /* ─── 1 ▸ pega token salvo (host) ou cria (guest) ─── */
       let token: string | null = sessionStorage.getItem(`token-${roomId}`);
 
-      if (!token) {
-        const identity = prompt('Seu nome:') || `guest-${Math.random()}`;
-        const res = await fetch('/api/get-token', {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body   : JSON.stringify({ roomId, identity, role: 'guest' }),
-        });
-        token = (await res.json()).token;
-      }
-      if (!token) throw new Error('Não foi possível obter o token JWT');
+if (!token) {
+  // entra como convidado
+  const res = await fetch('/api/get-token', {
+    method : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body   : JSON.stringify({
+      roomId,
+      identity: `guest-${Date.now()}`,
+      role: 'guest',
+    }),
+  });
+  token = (await res.json()).token as string;
+}
 
-      /* ─── 2 ▸ conecta ao LiveKit ─── */
-      const room = new Room();
-      await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token);
+const room = new Room();
+await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token);
+
 
       /* ─── 3 ▸ listener de sala de espera ─── */
       (room.on as any)('participantWaiting', (p: any) => {

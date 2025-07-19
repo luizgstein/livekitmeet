@@ -40,51 +40,53 @@ function Tabs(props: React.PropsWithChildren<{}>) {
 }
 
 
-/* ------------- DEMO (Nova Reunião) ------------- */
-function DemoMeetingTab({label}:{label:string}) {
+/* -------- DEMO (Nova Reunião) -------- */
+function DemoMeetingTab({ label }: { label: string }) {
   const router = useRouter();
-  const [menuOpen,   setMenuOpen]   = useState(false);
-  const [shareLink,  setShareLink]  = useState<string | null>(null);
+  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
-// helper único – usa a NOVA rota POST
-async function createRoomOnServer() {
-  const hostIdentity = prompt('Seu nome (host):') || `host-${Date.now()}`;
-  const res = await fetch('/api/create-room', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ hostIdentity }),
-  });
-  if (!res.ok) throw new Error('Falha ao criar sala');
-  return res.json() as Promise<{
-    roomId: string;
-    hostToken: string;
-    joinUrl: string;         // <<< mesma chave que o backend devolve
-  }>;
-}
+  /** helper: cria a sala no backend  */
+  async function createRoomOnServer() {
+    const hostIdentity = prompt('Seu nome (host):') || `host-${Date.now()}`;
 
-/* menu: criar link -------------------------------------------*/
-async function criarParaDepois() {
-  setMenuOpen(false);
+    const res = await fetch('/api/create-room', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ hostIdentity }),
+    });
+    if (!res.ok) throw new Error('Falha ao criar sala');
 
-  const { roomId, joinUrl, hostToken } = await createRoomOnServer();
+    /* <-  backend devolve exatamente essas chaves  */
+    return res.json() as Promise<{
+      roomId:    string;
+      hostToken: string;   // string JWT
+      joinUrl:   string;   // ex.: https://site.com/r/1dmk-5aaz
+    }>;
+  }
 
-  sessionStorage.setItem(`token-${roomId}`, hostToken);
+  /* -------- “Criar uma reunião para depois” -------- */
+  async function criarParaDepois() {
+    setMenuOpen(false);
 
-  await navigator.clipboard.writeText(joinUrl);
-  setShareLink(joinUrl);                       // diálogo “Link copiado”
-}
+    const { roomId, hostToken, joinUrl } = await createRoomOnServer();
 
-/* menu: iniciar e entrar -------------------------------------*/
-async function iniciarAgora() {
-  setMenuOpen(false);
+    sessionStorage.setItem(`token-${roomId}`, hostToken); // salva o token do host
+    await navigator.clipboard.writeText(joinUrl);         // copia o link completo
+    setShareLink(joinUrl);                                // abre modal “copiado”
+  }
 
-  const { roomId, joinUrl, hostToken } = await createRoomOnServer();
+  /* -------- “Iniciar uma reunião instantânea” -------- */
+  async function iniciarAgora() {
+    setMenuOpen(false);
 
-  sessionStorage.setItem(`token-${roomId}`, hostToken);
+    const { roomId, hostToken, joinUrl } = await createRoomOnServer();
 
-  router.push(`/r/${roomId}`);                 // só o path interno
-  // window.open(joinUrl, '_blank');           // se preferir nova aba
-}
+    sessionStorage.setItem(`token-${roomId}`, hostToken);
+
+    router.push(joinUrl);               // navega para o mesmo link gerado
+    // se preferir nova guia: window.open(joinUrl, '_blank');
+  }
 
 
   /* ---------- RENDER ---------- */

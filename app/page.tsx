@@ -60,33 +60,33 @@ function DemoMeetingTab({label}:{label:string}) {
     }>;
   }
 
-  /* 1. apenas copiar link curto */
-/* menu: criar link */
-async function criarParaDepois() {
-  setMenuOpen(false);
+      /* 1. apenas copiar link curto */
+    /* menu: criar link */
+    async function criarParaDepois() {
+      setMenuOpen(false);
 
-  // 🔽 recebe roomId e hostToken também
-  const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
-    .then((r) => r.json());
+      // 🔽 recebe roomId e hostToken também
+      const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
+        .then((r) => r.json());
 
-  // grava token para o host
-  sessionStorage.setItem(`token-${roomId}`, hostToken);
+      // grava token para o host
+      sessionStorage.setItem(`token-${roomId}`, hostToken);
 
-  await navigator.clipboard.writeText(url);
-  setShareLink(url);          // mostra diálogo de copiar
-}
+      await navigator.clipboard.writeText(url);
+      setShareLink(url);          // mostra diálogo de copiar
+    }
 
-/* menu: iniciar e entrar */
-async function iniciarAgora() {
-  setMenuOpen(false);
+    /* menu: iniciar e entrar */
+    async function iniciarAgora() {
+      setMenuOpen(false);
 
-  const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
-    .then((r) => r.json());
+      const { roomId, url, hostToken } = await fetch('/api/create-room?user=host')
+        .then((r) => r.json());
 
-  sessionStorage.setItem(`token-${roomId}`, hostToken);
+      sessionStorage.setItem(`token-${roomId}`, hostToken);
 
-  router.push(url);           // entra na mesma aba
-}
+      router.push(url);           // entra na mesma aba
+    }
 
   /* ---------- RENDER ---------- */
   return (

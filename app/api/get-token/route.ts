@@ -5,12 +5,17 @@ export async function POST(req: NextRequest) {
   const { roomId, identity, role } = await req.json();
 
   const at = new AccessToken(
-    process.env.LIVEKIT_API_KEY!,
-    process.env.LIVEKIT_API_SECRET!,
-  );
-  at.identity = identity;
-  at.addGrant({ roomJoin: true, room: roomId, canPublish: role === 'host' });
+  process.env.LIVEKIT_API_KEY!,
+  process.env.LIVEKIT_API_SECRET!,
+);
+at.identity = identity;                    // identidade vinda do POST
+at.addGrant({
+  roomJoin: true,
+  room    : roomId,
+  // se a role for "host", você pode liberar publicação
+  canPublish: role === 'host',
+});
 
-  /* string JWT */
-  return NextResponse.json({ token: at.toJwt() });
+const token = at.toJwt();                 // << agora é string
+return NextResponse.json({ token });
 }
